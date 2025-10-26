@@ -1,0 +1,18 @@
+# Dependencies
+/node_modules
+
+# Environment variables
+.env
+
+# Cache
+/cache
+
+# Logs
+*.log
+
+# Coverage directory
+/coverage
+
+# Build and distribution directories
+/build
+/dist
