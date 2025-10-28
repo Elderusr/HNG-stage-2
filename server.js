@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 const express = require('express');
+const cors = require('cors');
 const db = require('./src/models/index');
 const notFound = require('./src/middleware/notFound');
 const globalErrorHandler = require('./src/middleware/errorHandler');
@@ -8,6 +9,7 @@ const countries = require('./src/routes/countries');
 const countryRouter = require('./src/routes/countryRouter.js');
 
 const app = express();
+app.use(cors());
 app.use(express.json()); // this is a middleware to parse incoming JSON bodies
 
 app.use('/', countries);
