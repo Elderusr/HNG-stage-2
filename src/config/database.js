@@ -14,19 +14,13 @@ const sequelize = new Sequelize(dbName, dbUser, dbPass, {
   dialectOptions: {
 	ssl: {
 		require: true,
-		rejectUnauthorized: true
+		rejectUnauthorized: false
 	}
   },
 
   logging: false, // Set to console.log to see SQL queries
 });
 
-dialectOptions: {
-	ssl: {
-		require: true,
-			rejectUnauthorized: true
-	}
-},
 // Test the connection
 async function testConnection() {
   try {

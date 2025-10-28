@@ -2,6 +2,9 @@
 const axios = require('axios');
 const { sequelize, Country, SystemStatus } = require('../models');
 const ApiError = require('../middleware/ApiError');
+const dns = require('dns').promises;
+const { URL } = require('url');
+
 
 /**
  * Fetches all external data, processes it, and caches it in the database.
@@ -13,7 +16,34 @@ async function fetchAndCacheData() {
 
   // 1. Fetch Exchange Rates
   try {
-    const response = await axios.get(process.env.EXCHANGE_RATE_API_URL);
+    const exchangeUrl = process.env.EXCHANGE_RATE_API_URL;
+    console.log('Fetching EXCHANGE_RATE_API_URL:', exchangeUrl);
+    if (!exchangeUrl) throw new ApiError('EXCHANGE_RATE_API_URL not configured');
+
+    // Optional: quick DNS check from Node to see if hostname resolves
+    try {
+      const hostname = new URL(exchangeUrl).hostname;
+      await dns.lookup(hostname);
+    } catch (dnsErr) {
+      console.warn('DNS lookup failed (Node):', dnsErr && dnsErr.code ? dnsErr.code : dnsErr.message || dnsErr);
+      // continue — we'll still try the HTTP request (network may be intermittent)
+    }
+
+    // small retry helper for transient network/DNS failures
+    async function fetchWithRetry(url, attempts = 3, delayMs = 700) {
+      let lastErr;
+      for (let i = 0; i < attempts; i++) {
+        try {
+          return await axios.get(url, { timeout: 7000 });
+        } catch (err) {
+          lastErr = err;
+          if (i < attempts - 1) await new Promise(r => setTimeout(r, delayMs));
+        }
+      }
+      throw lastErr;
+    }
+
+    const response = await fetchWithRetry(exchangeUrl);
     rates = response.data.rates;
   } catch (error) {
     console.error('Error fetching exchange rates:', error.message);
